@@ -7,3 +7,5 @@ class MainAddTaskState extends MainStates {}
 class MainDoneTaskState extends MainStates {}
 
 class MainRemoveTaskState extends MainStates {}
+
+class MainEditTaskState extends MainStates {}

@@ -1,6 +1,28 @@
-// import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:todo_app/domain/model/todo.dart';
 
-// class AppPreferences {
-//   getbox() async {
-//   }
-// }
+const String TO_DO_LIST = "TO_DO_LIST";
+
+class AppPreferences {
+  List toDoList = [];
+
+  final _myBox = Hive.box('myBox');
+
+  // first time opening the app
+  void creatInitialData() {
+    toDoList = [
+      Todo(task: "Do Exercice"),
+      Todo(task: "Work"),
+    ];
+  }
+
+  // get data
+  void getData() {
+    toDoList = _myBox.get(TO_DO_LIST);
+  }
+
+  // update data
+  void updateData() {
+    _myBox.put(TO_DO_LIST, toDoList);
+  }
+}

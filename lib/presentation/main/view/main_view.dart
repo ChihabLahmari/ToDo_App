@@ -3,9 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:todo_app/domain/model.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lottie/lottie.dart';
+import 'package:todo_app/app/app_prefs.dart';
+import 'package:todo_app/domain/model/todo.dart';
 import 'package:todo_app/presentation/main/bloc/cubit.dart';
 import 'package:todo_app/presentation/main/bloc/states.dart';
+import 'package:todo_app/presentation/main/widgets/edit_task_dialog.dart';
 import 'package:todo_app/presentation/resources/app_size.dart';
 import 'package:todo_app/presentation/resources/app_strings.dart';
 import 'package:todo_app/presentation/resources/assets_manager.dart';
@@ -13,9 +18,10 @@ import 'package:todo_app/presentation/resources/color_manager.dart';
 import 'package:todo_app/presentation/resources/font_manager.dart';
 
 class MainView extends StatelessWidget {
-  final TextEditingController _taskTextEditingController = TextEditingController();
-
   MainView({super.key});
+
+  final TextEditingController _taskTextEditingController = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +31,8 @@ class MainView extends StatelessWidget {
         listener: (context, state) {},
         builder: (context, state) {
           var cubit = MainCubit.get(context);
-          List<Todo> todoList = cubit.tasks;
+          cubit.getDataFromLocal();
+          List todoList = cubit.db.toDoList;
           return Scaffold(
             backgroundColor: ColorManager.primary,
             extendBodyBehindAppBar: true,
@@ -56,37 +63,9 @@ class MainView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSize.s10, horizontal: AppSize.s14),
               child: Stack(
                 children: [
-                  SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          height: kBottomNavigationBarHeight + kBottomNavigationBarHeight,
-                        ),
-                        Text(
-                          AppStrings.allTodos,
-                          style: TextStyle(
-                            fontSize: AppSize.s30,
-                            fontWeight: FontWeight.w600,
-                            color: ColorManager.dark,
-                          ),
-                        ),
-                        ListView.separated(
-                          padding: const EdgeInsets.symmetric(vertical: AppSize.s20),
-                          scrollDirection: Axis.vertical,
-                          shrinkWrap: true,
-                          physics: const ClampingScrollPhysics(),
-                          itemCount: todoList.length,
-                          separatorBuilder: (context, index) {
-                            return const SizedBox(height: AppSize.s20);
-                          },
-                          itemBuilder: (context, index) {
-                            return taskItem(todoList.reversed.toList(), index, cubit);
-                          },
-                        )
-                      ],
-                    ),
-                  ),
+                  todoList.isNotEmpty
+                      ? allTasks(todoList, cubit)
+                      : Center(child: Lottie.asset(JsonAssets.empty)),
                   addNewTaskBar(cubit, context),
                 ],
               ),
@@ -97,59 +76,134 @@ class MainView extends StatelessWidget {
     );
   }
 
-  Widget taskItem(List<Todo> todoList, int index, MainCubit cubit) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppSize.s20),
-        color: ColorManager.white,
+  Widget allTasks(List<dynamic> todoList, MainCubit cubit) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(
+            height: kBottomNavigationBarHeight + kBottomNavigationBarHeight,
+          ),
+          
+          Text(
+            AppStrings.allTodos,
+            style: TextStyle(
+              fontSize: AppSize.s30,
+              fontWeight: FontWeight.w600,
+              color: ColorManager.dark,
+            ),
+          ),
+          ListView.separated(
+            padding: const EdgeInsets.symmetric(vertical: AppSize.s20),
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            physics: const ClampingScrollPhysics(),
+            itemCount: todoList.length,
+            separatorBuilder: (context, index) {
+              return const SizedBox(height: AppSize.s20);
+            },
+            itemBuilder: (context, index) {
+              return taskItem(todoList.reversed.toList(), index, cubit, _controller);
+            },
+          )
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSize.s14),
-        child: Row(
-          children: [
-            InkWell(
-              onTap: () {
-                cubit.doneTask(index);
-              },
-              child: Icon(
-                todoList[index].isDone ? Icons.check_box : Icons.check_box_outline_blank,
-                color: ColorManager.purple,
-              ),
-            ),
-            const SizedBox(width: AppSize.s30),
-            Expanded(
-              child: Text(
-                todoList[index].task,
-                style: TextStyle(
-                  color: ColorManager.grey,
-                  fontSize: FontSize.s18,
-                  fontWeight: FontWeightManager.medium,
-                  decoration: todoList[index].isDone ? TextDecoration.lineThrough : null,
+    );
+  }
+
+  Widget taskItem(
+    List todoList,
+    int index,
+    MainCubit cubit,
+    TextEditingController controller,
+  ) {
+    return Slidable(
+      endActionPane: ActionPane(
+        motion: const StretchMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return EditTaskDialogBox(
+                    key,
+                    controller,
+                    cubit,
+                    todoList[index].task,
+                    index,
+                  );
+                },
+              );
+            },
+            icon: Icons.edit,
+            backgroundColor: ColorManager.purple,
+            borderRadius: BorderRadius.circular(AppSize.s20),
+          ),
+          SlidableAction(
+            onPressed: (context) {
+              cubit.removeTask(todoList[index].task);
+            },
+            icon: Icons.delete,
+            backgroundColor: ColorManager.red,
+            borderRadius: BorderRadius.circular(AppSize.s20),
+          ),
+        ],
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppSize.s20),
+          color: ColorManager.white,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSize.s14),
+          child: Row(
+            children: [
+              InkWell(
+                onTap: () {
+                  cubit.doneTask(index);
+                },
+                child: Icon(
+                  todoList[index].isDone ? Icons.check_box : Icons.check_box_outline_blank,
+                  color: ColorManager.purple,
                 ),
               ),
-            ),
-            const SizedBox(width: AppSize.s30),
-            InkWell(
-              onTap: () {
-                cubit.removeTask(todoList[index].task);
-              },
-              child: Container(
-                height: AppSize.s35,
-                width: AppSize.s35,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppSize.s8),
-                  color: ColorManager.red,
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.delete,
-                    color: ColorManager.white,
-                    size: AppSize.s20,
+              const SizedBox(width: AppSize.s30),
+              Expanded(
+                child: Text(
+                  todoList[index].task,
+                  style: TextStyle(
+                    color: ColorManager.grey,
+                    fontSize: FontSize.s18,
+                    fontWeight: FontWeightManager.medium,
+                    decoration: todoList[index].isDone ? TextDecoration.lineThrough : null,
                   ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: AppSize.s30),
+
+              // InkWell(
+              //   onTap: () {
+              //     cubit.removeTask(todoList[index].task);
+              //   },
+              //   child: Container(
+              //     height: AppSize.s35,
+              //     width: AppSize.s35,
+              //     decoration: BoxDecoration(
+              //       borderRadius: BorderRadius.circular(AppSize.s8),
+              //       color: ColorManager.red,
+              //     ),
+              //     child: Center(
+              //       child: Icon(
+              //         Icons.delete,
+              //         color: ColorManager.white,
+              //         size: AppSize.s20,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+            ],
+          ),
         ),
       ),
     );

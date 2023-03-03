@@ -25,7 +25,7 @@ class _SplashViewState extends State<SplashView> {
     _timer = Timer(
       const Duration(seconds: AppConstants.splashDelay),
       () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => MainView()));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => MainView()));
       },
     );
   }

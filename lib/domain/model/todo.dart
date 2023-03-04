@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 part 'todo.g.dart';
 
@@ -9,8 +12,13 @@ class Todo extends HiveObject {
 
   @HiveField(1)
   bool isDone;
+
+  @HiveField(2)
+  String? image;
+
   Todo({
     required this.task,
     this.isDone = false,
+    this.image,
   });
 }

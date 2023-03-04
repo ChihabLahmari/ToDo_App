@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/src/widgets/framework.dart';
@@ -5,7 +9,9 @@ import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:todo_app/app/app_prefs.dart';
 import 'package:todo_app/domain/model/todo.dart';
 import 'package:todo_app/presentation/main/bloc/cubit.dart';
@@ -21,6 +27,7 @@ class MainView extends StatelessWidget {
   MainView({super.key});
 
   final TextEditingController _taskTextEditingController = TextEditingController();
+  final TextEditingController _searchEditingController = TextEditingController();
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -32,7 +39,12 @@ class MainView extends StatelessWidget {
         builder: (context, state) {
           var cubit = MainCubit.get(context);
           cubit.getDataFromLocal();
-          List todoList = cubit.db.toDoList;
+          List todoList;
+          if (_searchEditingController.text.isEmpty) {
+            todoList = cubit.db.toDoList;
+          } else {
+            todoList = cubit.todolist;
+          }
           return Scaffold(
             backgroundColor: ColorManager.primary,
             extendBodyBehindAppBar: true,
@@ -63,10 +75,32 @@ class MainView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: AppSize.s10, horizontal: AppSize.s14),
               child: Stack(
                 children: [
-                  todoList.isNotEmpty
-                      ? allTasks(todoList, cubit)
-                      : Center(child: Lottie.asset(JsonAssets.empty)),
-                  addNewTaskBar(cubit, context),
+                  Column(
+                    children: [
+                      const SizedBox(
+                        height: kBottomNavigationBarHeight + kBottomNavigationBarHeight,
+                      ),
+                      Container(
+                        width: double.infinity,
+                        height: AppSize.s50,
+                        decoration: BoxDecoration(
+                          color: ColorManager.white,
+                          borderRadius: BorderRadius.circular(AppSize.s20),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSize.s10),
+                          child: seachTextField(cubit),
+                        ),
+                      ),
+                      const SizedBox(height: AppSize.s20),
+                      Expanded(
+                        child: todoList.isNotEmpty
+                            ? allTasks(todoList, cubit)
+                            : Center(child: Lottie.asset(JsonAssets.empty)),
+                      ),
+                      addNewTaskBar(cubit, context),
+                    ],
+                  )
                 ],
               ),
             ),
@@ -76,15 +110,40 @@ class MainView extends StatelessWidget {
     );
   }
 
+  Widget seachTextField(MainCubit cubit) {
+    return TextFormField(
+      controller: _searchEditingController,
+      onChanged: (value) {
+        cubit.searchTask(_searchEditingController.text);
+      },
+      decoration: InputDecoration(
+        label: const Text(AppStrings.search),
+        prefixIcon: Icon(Icons.search, color: ColorManager.purple),
+        floatingLabelBehavior: FloatingLabelBehavior.never,
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.only(
+          top: AppSize.s5,
+          left: AppSize.s5,
+          right: AppSize.s5,
+          bottom: AppSize.s10,
+        ),
+        labelStyle: TextStyle(
+          color: ColorManager.grey,
+          fontSize: FontSize.s18,
+          fontWeight: FontWeightManager.medium,
+        ),
+      ),
+    );
+  }
+
   Widget allTasks(List<dynamic> todoList, MainCubit cubit) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
-            height: kBottomNavigationBarHeight + kBottomNavigationBarHeight,
-          ),
-          
+          // const SizedBox(
+          //   height: kBottomNavigationBarHeight + kBottomNavigationBarHeight,
+          // ),
           Text(
             AppStrings.allTodos,
             style: TextStyle(
@@ -121,25 +180,27 @@ class MainView extends StatelessWidget {
       endActionPane: ActionPane(
         motion: const StretchMotion(),
         children: [
-          SlidableAction(
-            onPressed: (context) {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return EditTaskDialogBox(
-                    key,
-                    controller,
-                    cubit,
-                    todoList[index].task,
-                    index,
-                  );
-                },
-              );
-            },
-            icon: Icons.edit,
-            backgroundColor: ColorManager.purple,
-            borderRadius: BorderRadius.circular(AppSize.s20),
-          ),
+          _searchEditingController.text == ''
+              ? SlidableAction(
+                  onPressed: (context) {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return EditTaskDialogBox(
+                          key,
+                          controller,
+                          cubit,
+                          todoList[index].task,
+                          index,
+                        );
+                      },
+                    );
+                  },
+                  icon: Icons.edit,
+                  backgroundColor: ColorManager.purple,
+                  borderRadius: BorderRadius.circular(AppSize.s20),
+                )
+              : SizedBox(),
           SlidableAction(
             onPressed: (context) {
               cubit.removeTask(todoList[index].task);
@@ -180,8 +241,84 @@ class MainView extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: AppSize.s30),
+              const SizedBox(width: AppSize.s20),
+              // if (todoList[index].image != null)
+              todoList[index].image != null
+                  ?
 
+                  // Container(
+                  //     height: AppSize.s100,
+                  //     width: AppSize.s100,
+                  //     child: Shimmer.fromColors(
+                  //       baseColor: Colors.grey[850]!,
+                  //       highlightColor: Colors.grey[800]!,
+                  //       child: Container(
+                  //         height: AppSize.s100,
+                  //         decoration: BoxDecoration(
+                  //           color: ColorManager.purple,
+                  //           borderRadius: BorderRadius.circular(8.0),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   )
+
+                  // CachedNetworkImage(
+                  //     imageUrl: '',
+                  //     imageBuilder: (context, imageProvider) {
+                  //       return Container(
+                  //         height: AppSize.s100,
+                  //         width: AppSize.s100,
+                  //         decoration: BoxDecoration(
+                  //           color: ColorManager.white,
+                  //           borderRadius: BorderRadius.circular(AppSize.s10),
+                  //           image: DecorationImage(
+                  //             image: MemoryImage(
+                  //               base64Decode(todoList[index].image),
+                  //             ),
+                  //             fit: BoxFit.cover,
+                  //           ),
+                  //         ),
+                  //       );
+                  //     },
+                  //     fit: BoxFit.cover,
+                  //     placeholder: (context, url) => Shimmer.fromColors(
+                  //       baseColor: Colors.grey[850]!,
+                  //       highlightColor: Colors.grey[800]!,
+                  //       child: Container(
+                  //         height: AppSize.s100,
+                  //         decoration: BoxDecoration(
+                  //           color: Colors.black,
+                  //           borderRadius: BorderRadius.circular(8.0),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //     errorWidget: (context, url, error) => Shimmer.fromColors(
+                  //       baseColor: Colors.grey[850]!,
+                  //       highlightColor: Colors.grey[800]!,
+                  //       child: Container(
+                  //         height: AppSize.s100,
+                  //         decoration: BoxDecoration(
+                  //           color: Colors.black,
+                  //           borderRadius: BorderRadius.circular(8.0),
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   )
+                  Container(
+                      height: AppSize.s100,
+                      width: AppSize.s100,
+                      decoration: BoxDecoration(
+                        color: ColorManager.white,
+                        borderRadius: BorderRadius.circular(AppSize.s10),
+                        image: DecorationImage(
+                          image: MemoryImage(
+                            base64Decode(todoList[index].image),
+                          ),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
+                  : const SizedBox(),
               // InkWell(
               //   onTap: () {
               //     cubit.removeTask(todoList[index].task);
@@ -235,29 +372,64 @@ class MainView extends StatelessWidget {
                   // padding: const EdgeInsets.all(AppSize.s10),
                   padding: const EdgeInsets.only(left: AppSize.s10, right: AppSize.s10),
                   child: Center(
-                    child: TextFormField(
-                      controller: _taskTextEditingController,
-                      decoration: InputDecoration(
-                        label: const Text(AppStrings.addNewToDo),
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.only(
-                          left: AppSize.s5,
-                          right: AppSize.s5,
-                          bottom: AppSize.s20,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _taskTextEditingController,
+                            decoration: InputDecoration(
+                              label: const Text(AppStrings.addNewToDo),
+                              floatingLabelBehavior: FloatingLabelBehavior.never,
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.only(
+                                left: AppSize.s5,
+                                right: AppSize.s5,
+                                bottom: AppSize.s20,
+                              ),
+                              labelStyle: TextStyle(
+                                color: ColorManager.grey,
+                                fontSize: FontSize.s18,
+                                fontWeight: FontWeightManager.medium,
+                              ),
+                            ),
+                          ),
                         ),
-                        labelStyle: TextStyle(
-                          color: ColorManager.grey,
-                          fontSize: FontSize.s18,
-                          fontWeight: FontWeightManager.medium,
+                        const SizedBox(width: AppSize.s5),
+                        InkWell(
+                          onTap: () {
+                            cubit.pickImage();
+                          },
+                          child: cubit.image == null
+                              ? CircleAvatar(
+                                  maxRadius: AppSize.s25,
+                                  backgroundColor: ColorManager.white,
+                                  child: Icon(
+                                    Icons.add_photo_alternate_outlined,
+                                    size: AppSize.s35,
+                                    color: ColorManager.purple,
+                                  ),
+                                )
+                              : Container(
+                                  height: AppSize.s35,
+                                  width: AppSize.s35,
+                                  decoration: BoxDecoration(
+                                    color: ColorManager.white,
+                                    borderRadius: BorderRadius.circular(AppSize.s10),
+                                    image: DecorationImage(
+                                      image: FileImage(cubit.image!),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  // child: Image.memory(base64Decode(cubit.image.toString())),
+                                ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: AppSize.s15),
+            const SizedBox(width: AppSize.s10),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSize.s25),

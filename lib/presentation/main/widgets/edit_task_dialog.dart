@@ -84,7 +84,7 @@ class EditTaskDialogBox extends StatelessWidget {
                 Expanded(
                   child: InkWell(
                     onTap: () {
-                      cubit.editTask(index, controller.text);
+                      cubit.editTask(index, controller.text, task);
                       Navigator.of(context).pop();
                     },
                     child: Container(

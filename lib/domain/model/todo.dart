@@ -16,8 +16,12 @@ class Todo extends HiveObject {
   @HiveField(2)
   String? image;
 
+  @HiveField(3)
+  String id;
+
   Todo({
     required this.task,
+    required this.id,
     this.isDone = false,
     this.image,
   });

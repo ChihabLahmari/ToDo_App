@@ -43,7 +43,7 @@ class MainView extends StatelessWidget {
           if (_searchEditingController.text.isEmpty) {
             todoList = cubit.db.toDoList;
           } else {
-            todoList = cubit.todolist;
+            todoList = cubit.filteredList;
           }
           return Scaffold(
             backgroundColor: ColorManager.primary,
@@ -98,7 +98,7 @@ class MainView extends StatelessWidget {
                             ? allTasks(todoList, cubit)
                             : Center(child: Lottie.asset(JsonAssets.empty)),
                       ),
-                      addNewTaskBar(cubit, context),
+                      if (_searchEditingController.text.isEmpty) addNewTaskBar(cubit, context),
                     ],
                   )
                 ],
@@ -180,30 +180,30 @@ class MainView extends StatelessWidget {
       endActionPane: ActionPane(
         motion: const StretchMotion(),
         children: [
-          _searchEditingController.text == ''
-              ? SlidableAction(
-                  onPressed: (context) {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return EditTaskDialogBox(
-                          key,
-                          controller,
-                          cubit,
-                          todoList[index].task,
-                          index,
-                        );
-                      },
-                    );
-                  },
-                  icon: Icons.edit,
-                  backgroundColor: ColorManager.purple,
-                  borderRadius: BorderRadius.circular(AppSize.s20),
-                )
-              : SizedBox(),
+          // _searchEditingController.text == '' ?
           SlidableAction(
             onPressed: (context) {
-              cubit.removeTask(todoList[index].task);
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return EditTaskDialogBox(
+                    key,
+                    controller,
+                    cubit,
+                    todoList[index].task,
+                    todoList[index].id,
+                  );
+                },
+              );
+            },
+            icon: Icons.edit,
+            backgroundColor: ColorManager.purple,
+            borderRadius: BorderRadius.circular(AppSize.s20),
+          ),
+          // : SizedBox(),
+          SlidableAction(
+            onPressed: (context) {
+              cubit.removeTask(todoList[index].id, _searchEditingController.text);
             },
             icon: Icons.delete,
             backgroundColor: ColorManager.red,
@@ -222,7 +222,7 @@ class MainView extends StatelessWidget {
             children: [
               InkWell(
                 onTap: () {
-                  cubit.doneTask(index);
+                  cubit.doneTask(todoList[index].id);
                 },
                 child: Icon(
                   todoList[index].isDone ? Icons.check_box : Icons.check_box_outline_blank,

@@ -10,14 +10,14 @@ class EditTaskDialogBox extends StatelessWidget {
   final TextEditingController controller;
   MainCubit cubit;
   String task;
-  int index;
+  String id;
 
   EditTaskDialogBox(
     Key? key,
     this.controller,
     this.cubit,
     this.task,
-    this.index,
+    this.id,
   ) : super(key: key);
 
   @override
@@ -84,7 +84,7 @@ class EditTaskDialogBox extends StatelessWidget {
                 Expanded(
                   child: InkWell(
                     onTap: () {
-                      cubit.editTask(index, controller.text, task);
+                      cubit.editTask(id, controller.text);
                       Navigator.of(context).pop();
                     },
                     child: Container(

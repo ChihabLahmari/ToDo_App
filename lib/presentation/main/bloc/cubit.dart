@@ -23,6 +23,8 @@ class MainCubit extends Cubit<MainStates> {
   Uint8List? bytes;
   String? img64;
 
+  late List filteredList;
+
   final _myBox = Hive.box('mybox');
   AppPreferences db = AppPreferences();
 
@@ -35,7 +37,9 @@ class MainCubit extends Cubit<MainStates> {
   }
 
   void addTask(String task) async {
-    db.toDoList.add(Todo(task: task, image: img64));
+    db.toDoList
+        .add(Todo(task: task, image: img64, id: DateTime.now().millisecondsSinceEpoch.toString()));
+    // print("✅ ADD task $task :✅ \n ${DateTime.now().millisecondsSinceEpoch}");
 
     image = null;
     img64 = null;
@@ -45,31 +49,36 @@ class MainCubit extends Cubit<MainStates> {
     emit(MainAddTaskState());
   }
 
-  void doneTask(int index) {
-    db.toDoList.reversed.toList()[index].isDone = !db.toDoList.reversed.toList()[index].isDone;
+  void doneTask(String id) {
+    // db.toDoList.reversed.toList()[index].isDone = !db.toDoList.reversed.toList()[index].isDone;
+
+    doneTaskById(id);
 
     db.updateData();
 
     emit(MainDoneTaskState());
   }
 
-  void editTask(int index, String newTask, String oldTask) {
-    print("✅ Edit Task ✅");
-    print(index);
-    db.toDoList.reversed.toList()[index].task = newTask;
+  void editTask(String id, String newTask) {
+    editTaskById(id, newTask);
 
     db.updateData();
 
     emit(MainEditTaskState());
   }
 
-  void removeTask(String task) {
-    db.toDoList.removeWhere((element) => element.task == task);
+  void removeTask(String id, String searchText) {
+    // db.toDoList.removeWhere((element) => element.task == task);
+    db.toDoList.removeWhere((todo) => todo.id == id);
+
+    // print("✅ id :✅ \n $id");
 
     db.updateData();
 
     // TODO: handel this (m3mbalish kfh nmdlha task ki hiya trdli empty w ki n7iha tfzd)
-    searchTask(task);
+    if (searchText != "") {
+      searchTask(searchText);
+    }
 
     emit(MainRemoveTaskState());
   }
@@ -94,19 +103,50 @@ class MainCubit extends Cubit<MainStates> {
     }
   }
 
-  late List todolist;
-
   void searchTask(String? value) {
-    print("Search started ");
-    if (value == '') {
-      // print("✅ Not Filtered List ✅");
-      todolist = db.toDoList;
-
+    // print("🔥 Search started ✅");
+    if (value == null || value == '') {
+      filteredList = db.toDoList;
       emit(MainSearchTaskState());
     } else {
-      // print("✅ Filtered List ✅");
-      todolist = db.toDoList.where((element) => element.task.startsWith(value!)).toList();
+      filteredList = db.toDoList.where((element) => element.task.startsWith(value)).toList();
       emit(MainSearchTaskState());
+    }
+  }
+
+  // edit Functions ::
+  void editTaskById(String id, String newTask) {
+    // find the object in the list using its ID
+    Todo? obj = db.toDoList.firstWhere((todo) => todo.id == id, orElse: () => null);
+
+    // if the object is found, update its task property
+    if (obj != null) {
+      obj.task = newTask;
+    }
+
+    // 🛑 IMPORTANT:
+
+    //  the obj is edited in the db.todoList & the FilreredList
+    //(because both lists contain a reference to the same object in memory)
+
+    //     If the same object is present in two different lists,
+    // editing the object in one list will also update it in the other list.
+    // This is because both lists contain a reference to the same object in memory.
+
+    // When you retrieve an object from a list and store it in a variable,
+    // you are actually storing a reference to the object,
+    // not a copy of the object.
+    // So if you edit the object through that variable,
+    // the changes will be reflected in all lists that contain a reference to that object.
+  }
+
+  void doneTaskById(String id) {
+    // find the object in the list using its ID
+    Todo? obj = db.toDoList.firstWhere((todo) => todo.id == id, orElse: () => null);
+
+    // if the object is found, update its isDone property
+    if (obj != null) {
+      obj.isDone = !obj.isDone;
     }
   }
 }

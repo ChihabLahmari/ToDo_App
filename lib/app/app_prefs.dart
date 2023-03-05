@@ -11,8 +11,8 @@ class AppPreferences {
   // first time opening the app
   void creatInitialData() {
     toDoList = [
-      Todo(task: "Do Exercice"),
-      Todo(task: "Work"),
+      Todo(task: "Do Exercice", id: DateTime.now().millisecondsSinceEpoch.toString()),
+      Todo(task: "Work", id: DateTime.now().millisecondsSinceEpoch.toString()),
     ];
   }
 

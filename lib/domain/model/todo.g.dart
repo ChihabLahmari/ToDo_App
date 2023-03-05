@@ -18,6 +18,7 @@ class TodoAdapter extends TypeAdapter<Todo> {
     };
     return Todo(
       task: fields[0] as String,
+      id: fields[3] as String,
       isDone: fields[1] as bool,
       image: fields[2] as String?,
     );
@@ -26,13 +27,15 @@ class TodoAdapter extends TypeAdapter<Todo> {
   @override
   void write(BinaryWriter writer, Todo obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.task)
       ..writeByte(1)
       ..write(obj.isDone)
       ..writeByte(2)
-      ..write(obj.image);
+      ..write(obj.image)
+      ..writeByte(3)
+      ..write(obj.id);
   }
 
   @override

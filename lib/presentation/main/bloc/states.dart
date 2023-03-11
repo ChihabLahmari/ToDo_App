@@ -14,4 +14,6 @@ class MainPickImageSuccessState extends MainStates {}
 
 class MainPickImageErrorState extends MainStates {}
 
-class MainSearchTaskState extends MainStates{}
+class MainSearchTaskState extends MainStates {}
+
+class MainDeleteAllTasksState extends MainStates {}

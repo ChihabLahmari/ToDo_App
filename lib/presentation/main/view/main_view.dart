@@ -8,20 +8,24 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:todo_app/app/app_prefs.dart';
 import 'package:todo_app/domain/model/todo.dart';
 import 'package:todo_app/presentation/main/bloc/cubit.dart';
 import 'package:todo_app/presentation/main/bloc/states.dart';
-import 'package:todo_app/presentation/main/widgets/edit_task_dialog.dart';
 import 'package:todo_app/presentation/resources/app_size.dart';
 import 'package:todo_app/presentation/resources/app_strings.dart';
 import 'package:todo_app/presentation/resources/assets_manager.dart';
 import 'package:todo_app/presentation/resources/color_manager.dart';
 import 'package:todo_app/presentation/resources/font_manager.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../widgets/edit_task_dialog.dart';
 
 class MainView extends StatelessWidget {
   MainView({super.key});
@@ -56,20 +60,101 @@ class MainView extends StatelessWidget {
               ),
               backgroundColor: Colors.transparent,
               elevation: 0,
-              leading: Icon(
-                Icons.menu,
-                size: AppSize.s30,
-                color: ColorManager.dark,
-              ),
-              actions: [
-                CircleAvatar(
-                  backgroundColor: ColorManager.purple,
-                  backgroundImage: const AssetImage(ImageAssets.chihab),
+              iconTheme: IconThemeData(color: ColorManager.dark, size: AppSize.s30),
+              leading: CircleAvatar(
+                backgroundColor: ColorManager.primary,
+                child: SizedBox(
+                  height: AppSize.s30,
+                  width: AppSize.s30,
+                  child: Image.asset(
+                    ImageAssets.todo1,
+                  ),
                 ),
-                const SizedBox(
-                  width: AppSize.s14,
-                )
-              ],
+              ),
+              // actions: [
+              //   IconButton(
+              //     onPressed: () {},
+              //     icon: Icon(Icons.track_changes),
+              //   ),
+              //   Builder(builder: (context) {
+              //     return IconButton(
+              //         icon: Icon(Icons.menu),
+              //         onPressed: () {
+              //           Scaffold.of(context).openEndDrawer();
+              //         });
+              //   }),
+              // ],
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => removeTasksDialog(context, cubit),
+                      );
+                    },
+                    icon: Icon(
+                      Icons.delete,
+                      // color: ColorManager.purple,
+                      size: AppSize.s30,
+                    ),
+                  )
+                ],
+              ),
+              titleSpacing: 0,
+            ),
+            endDrawer: Drawer(
+              backgroundColor: ColorManager.primary,
+              child: ListView(
+                // padding: EdgeInsets.zero,
+                children: [
+                  DrawerHeader(
+                    child: Center(
+                      child: Text(
+                        AppStrings.devContact,
+                        style: TextStyle(
+                          fontSize: AppSize.s17,
+                          color: ColorManager.dark,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(FontAwesomeIcons.instagram),
+                    title: const Text(AppStrings.instagramAccounte),
+                    subtitle: const Text(AppStrings.tapToOpen),
+                    onTap: () {
+                      goToUrl(AppStrings.instaLink);
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(FontAwesomeIcons.github),
+                    title: const Text(AppStrings.githubAccounte),
+                    subtitle: const Text(AppStrings.tapToOpen),
+                    onTap: () {
+                      goToUrl(AppStrings.gitHubLink);
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(FontAwesomeIcons.linkedinIn),
+                    title: const Text(AppStrings.linkdInAccounte),
+                    subtitle: const Text(AppStrings.tapToOpen),
+                    onTap: () {
+                      goToUrl(AppStrings.linkedinLink);
+                    },
+                  ),
+                  const Divider(),
+                  const ListTile(
+                    leading: Icon(Icons.info),
+                    title: Text(AppStrings.appVersion),
+                    subtitle: Text(AppStrings.appVersionNum),
+                  ),
+                ],
+              ),
             ),
             body: Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSize.s10, horizontal: AppSize.s14),
@@ -198,7 +283,7 @@ class MainView extends StatelessWidget {
             },
             icon: Icons.edit,
             backgroundColor: ColorManager.purple,
-            borderRadius: BorderRadius.circular(AppSize.s20),
+            borderRadius: BorderRadius.circular(20),
           ),
           // : SizedBox(),
           SlidableAction(
@@ -225,7 +310,7 @@ class MainView extends StatelessWidget {
                   cubit.doneTask(todoList[index].id);
                 },
                 child: Icon(
-                  todoList[index].isDone ? Icons.check_box : Icons.check_box_outline_blank,
+                  todoList[index].isDone ? Icons.check_box : Icons.check_box_outline_blank_outlined,
                   color: ColorManager.purple,
                 ),
               ),
@@ -463,6 +548,98 @@ class MainView extends StatelessWidget {
                   ),
                 ),
               ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> goToUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  Widget removeTasksDialog(BuildContext context, MainCubit cubit) {
+    return AlertDialog(
+      backgroundColor: ColorManager.primary,
+      shadowColor: ColorManager.purple.withOpacity(0.5),
+      content: Container(
+        height: AppSize.s120,
+        width: double.maxFinite,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Are you sure you want to delete all tasks ?",
+              style: TextStyle(
+                color: ColorManager.dark,
+                fontSize: AppSize.s20,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppSize.s20),
+                        color: ColorManager.purple,
+                      ),
+                      child: Center(
+                          child: Padding(
+                        padding: const EdgeInsets.all(AppSize.s10),
+                        child: Text(
+                          "Cencel",
+                          style: TextStyle(
+                            color: ColorManager.white,
+                            fontSize: AppSize.s15,
+                            fontWeight: FontWeightManager.medium,
+                          ),
+                        ),
+                      )),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSize.s20),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      cubit.deleteAllTasks();
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      // height: AppSize.s35,
+                      // width: AppSize.s60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppSize.s20),
+                        color: ColorManager.purple,
+                      ),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSize.s10),
+                          child: Text(
+                            "Delete",
+                            style: TextStyle(
+                              color: ColorManager.white,
+                              fontSize: AppSize.s15,
+                              fontWeight: FontWeightManager.medium,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             )
           ],
         ),

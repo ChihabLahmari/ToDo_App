@@ -10,8 +10,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:todo_app/app/app_prefs.dart';
 import 'package:todo_app/domain/model/todo.dart';
-import 'package:todo_app/presentation/main/bloc/states.dart';
 import 'package:path/path.dart';
+import 'package:todo_app/presentation/main/bloc/states.dart';
 
 class MainCubit extends Cubit<MainStates> {
   MainCubit() : super(MainInitState());
@@ -112,6 +112,11 @@ class MainCubit extends Cubit<MainStates> {
       filteredList = db.toDoList.where((element) => element.task.startsWith(value)).toList();
       emit(MainSearchTaskState());
     }
+  }
+
+  void deleteAllTasks() {
+    db.deleteAllTasks();
+    emit(MainDeleteAllTasksState());
   }
 
   // edit Functions ::

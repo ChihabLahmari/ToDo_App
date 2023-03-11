@@ -7,6 +7,5 @@ class JsonAssets {
 }
 
 class ImageAssets {
-  static const String profile = "$imagePath/profile.jpg";
-  static const String chihab = "$imagePath/chihab.jpeg";
+  static const String todo1 = "$imagePath/todo1.png";
 }

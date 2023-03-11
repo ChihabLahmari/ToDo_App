@@ -1,10 +1,10 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:todo_app/presentation/resources/font_manager.dart';
+import 'package:todo_app/presentation/main/bloc/cubit.dart';
 
 import '../../resources/app_size.dart';
 import '../../resources/color_manager.dart';
-import '../bloc/cubit.dart';
+import '../../resources/font_manager.dart';
 
 class EditTaskDialogBox extends StatelessWidget {
   final TextEditingController controller;

@@ -25,4 +25,9 @@ class AppPreferences {
   void updateData() {
     _myBox.put(TO_DO_LIST, toDoList);
   }
+
+  // delete all tasks
+  void deleteAllTasks() {
+    _myBox.put(TO_DO_LIST, []);
+  }
 }

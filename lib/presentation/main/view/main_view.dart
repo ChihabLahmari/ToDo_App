@@ -1,21 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:todo_app/app/app_prefs.dart';
-import 'package:todo_app/domain/model/todo.dart';
 import 'package:todo_app/presentation/main/bloc/cubit.dart';
 import 'package:todo_app/presentation/main/bloc/states.dart';
 import 'package:todo_app/presentation/resources/app_size.dart';
@@ -54,7 +44,7 @@ class MainView extends StatelessWidget {
             extendBodyBehindAppBar: true,
             appBar: AppBar(
               systemOverlayStyle: SystemUiOverlayStyle(
-                statusBarColor: ColorManager.dark,
+                statusBarColor: ColorManager.primary,
                 statusBarIconBrightness: Brightness.dark,
                 statusBarBrightness: Brightness.light,
               ),
@@ -94,7 +84,7 @@ class MainView extends StatelessWidget {
                         builder: (context) => removeTasksDialog(context, cubit),
                       );
                     },
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.delete,
                       // color: ColorManager.purple,
                       size: AppSize.s30,
@@ -567,7 +557,7 @@ class MainView extends StatelessWidget {
     return AlertDialog(
       backgroundColor: ColorManager.primary,
       shadowColor: ColorManager.purple.withOpacity(0.5),
-      content: Container(
+      content: SizedBox(
         height: AppSize.s120,
         width: double.maxFinite,
         child: Column(

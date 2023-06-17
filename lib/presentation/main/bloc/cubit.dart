@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_null_comparison
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -33,8 +35,7 @@ class MainCubit extends Cubit<MainStates> {
   }
 
   void addTask(String task) async {
-    db.toDoList
-        .add(Todo(task: task, image: img64, id: DateTime.now().millisecondsSinceEpoch.toString()));
+    db.toDoList.add(Todo(task: task, image: img64, id: DateTime.now().millisecondsSinceEpoch.toString()));
     // print("✅ ADD task $task :✅ \n ${DateTime.now().millisecondsSinceEpoch}");
 
     image = null;
@@ -105,9 +106,27 @@ class MainCubit extends Cubit<MainStates> {
       filteredList = db.toDoList;
       emit(MainSearchTaskState());
     } else {
-      filteredList = db.toDoList.where((element) => element.task.startsWith(value)).toList();
+      searchByTask(value);
       emit(MainSearchTaskState());
     }
+  }
+
+  void searchByTask(String? value) {
+    value != null
+        ? filteredList = db.toDoList.where(
+            (item) {
+              if (item.task.toLowerCase().contains(value) == true) {
+                return item.task.toLowerCase().contains(value);
+              }
+              if (item.task.toUpperCase().contains(value) == true) {
+                return item.task.toUpperCase().contains(value);
+              } else {
+                return item.task.contains(value);
+              }
+            },
+          ).toList()
+        : filteredList = [];
+    // emit(MainSearchTaskState());
   }
 
   void deleteAllTasks() {
@@ -118,7 +137,7 @@ class MainCubit extends Cubit<MainStates> {
   // edit Functions ::
   void editTaskById(String id, String newTask) {
     // find the object in the list using its ID
-    Todo? obj = db.toDoList.firstWhere((todo) => todo.id == id, orElse: () => null);
+    Todo? obj = db.toDoList.firstWhere((todo) => todo.id == id);
 
     // if the object is found, update its task property
     if (obj != null) {
@@ -143,7 +162,7 @@ class MainCubit extends Cubit<MainStates> {
 
   void doneTaskById(String id) {
     // find the object in the list using its ID
-    Todo? obj = db.toDoList.firstWhere((todo) => todo.id == id, orElse: () => null);
+    Todo? obj = db.toDoList.firstWhere((todo) => todo.id == id);
 
     // if the object is found, update its isDone property
     if (obj != null) {

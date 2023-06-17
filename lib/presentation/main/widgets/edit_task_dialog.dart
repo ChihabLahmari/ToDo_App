@@ -1,4 +1,5 @@
-import 'package:flutter/cupertino.dart';
+// ignore_for_file: must_be_immutable
+
 import 'package:flutter/material.dart';
 import 'package:todo_app/presentation/main/bloc/cubit.dart';
 
@@ -26,7 +27,7 @@ class EditTaskDialogBox extends StatelessWidget {
     return AlertDialog(
       backgroundColor: ColorManager.primary,
       shadowColor: ColorManager.purple.withOpacity(0.5),
-      content: Container(
+      content: SizedBox(
         height: AppSize.s120,
         width: double.maxFinite,
         child: Column(
@@ -80,7 +81,7 @@ class EditTaskDialogBox extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: AppSize.s20),
+                const SizedBox(width: AppSize.s20),
                 Expanded(
                   child: InkWell(
                     onTap: () {

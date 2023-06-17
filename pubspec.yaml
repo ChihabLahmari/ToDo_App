@@ -35,10 +35,10 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "asset/icons/appicon2.png"
+  image_path: "asset/icons/appicon.png"
 
 flutter_native_splash:
-  image: "asset/icons/appicon2.png"
+  image: "asset/icons/appicon.png"
   color: "#ffffff"
 
 flutter:

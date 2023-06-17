@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:image_picker/image_picker.dart';
 
 part 'todo.g.dart';
 
